@@ -1,0 +1,47 @@
+{
+    "Subject": {
+        "Attributes": [
+            {
+                "attribute_id": "user_id",
+                "data_type": "integer",
+                "value": "1"
+            },
+            {
+                "attribute_id": "user_name",
+                "data_type": "string", 
+                "value": "test"
+            },
+            {
+                "attribute_id": "1_Member",
+                "data_type": "string",
+                "value": "TEST"
+            }
+        ]
+    },
+    "Action": {
+        "Type": "read",
+        "Attributes": []
+    },
+    "Resource": {
+        "Attributes": [
+            {
+                "attribute_id": "device_id",
+                "data_type": "integer",
+                "value": "1"
+            },
+            {
+                "attribute_id": "device_owner_id",
+                "data_type": "integer",
+                "value": null
+            },
+            {
+                "attribute_id": "1_Member",
+                "data_type": "string",
+                "value": "TEST"
+            }
+        ]
+    },
+    "Environment": {
+        "Attributes":[]
+    }
+}

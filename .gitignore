@@ -1,0 +1,4 @@
+/database.db
+/node_modules
+/accesscontrol/policies/devices/*
+/accesscontrol/policies/groups/*

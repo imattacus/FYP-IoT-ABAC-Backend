@@ -1,0 +1,23 @@
+{
+    "id": "global_root",
+    "target":{},
+    "obligations":[],
+    "algorithm": "firstApplicable",
+    "policies": [
+        {
+            "id": "global_owner_has_access",
+            "target":{},
+            "obligations":[],
+            "algorithm": "firstApplicable",
+            "rules": [
+                {
+                    "id": 1,
+                    "target":{},
+                    "condition":{"comparator":"equalTo", "param1":{"subjectAttribute": "user_id"}, "param2": {"resourceAttribute": "device_owner_id"}},
+                    "effect":"Permit",
+                    "obligations":[]
+                }
+            ]
+        }
+    ]
+}
