@@ -14,6 +14,7 @@ router.get("/test", authentication.requireAuthenticated, (req, res) => {
 
 // Register a new household
 router.post('/households', (req, res) => {
+    console.log("Adding household to db");
     const housename = req.body.name;
     db.run("INSERT INTO Household(name) VALUES (?)", housename, { Promise })
         .then(cb => { // Using the callback values of the INSERT function to send back new house ID

@@ -3,6 +3,7 @@ const db = require('sqlite')
 const router = express.Router()
 const Promise = require('bluebird')
 const authentication = require('../authentication')
+const SimulationCommunicator = require('../SimulationCommunicator')
 
 const rp = require('request-promise');
 
@@ -62,24 +63,20 @@ router.post('/devices/:deviceID', authentication.requireAuthenticated, (req, res
     let authrequest = new Request();
     authrequest.populateAttributes(db, userID, deviceID)
         .then(_ => PDP.evaluate(authrequest, db)) // Send the request to the PDP to be evaluated
-        .then(results => {
-            console.log(results);
-            if (results[0] == undefined || results[0].Decision != 'Permit') {
+        .then(result => {
+            console.log(result);
+            if (result.Decision != 'Permit') {
                 // No good response from PDP so not going to allow this
                 res.status(403);
                 return Promise.reject('User did not have permission to access this device.');
-            } else {
+            } else if (SimulationCommunicator.isConnected()){
                 // User is allowed 
                 console.log("User access is allowed");
                 console.log("Sending request to server from user id " + userID + " for device " + deviceID);
-                return rp({
-                    method: 'POST',
-                    uri: 'http://localhost:3001/iot/'+deviceID+'/status',
-                    body: {
-                        status: status
-                    },
-                    json: true
-                });
+
+                return SimulationCommunicator.sendDeviceStatus(deviceID, status)
+            } else {
+                Promise.reject("Server has no connection to the simulator!")
             }
         })
         .then(body => {
@@ -91,7 +88,10 @@ router.post('/devices/:deviceID', authentication.requireAuthenticated, (req, res
             }
         })
         .then(cb => cb.changes > 0 ? res.send('success') : res.send('fail'))
-        .catch(err=> res.send(err));
+        .catch(err=> {
+            console.log("error")
+            res.send(err)
+        });
 });
 
 module.exports = router;

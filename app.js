@@ -3,7 +3,9 @@ const bodyParser = require('body-parser')
 const sqlite = require('sqlite')
 const Promise = require('bluebird')
 const cors = require('cors')
-const path = require('path')
+const WebSocket = require('ws')
+const http = require('http')
+const SimulationCommunicator = require('./SimulationCommunicator')
 
 const app = express();
 const port = process.env.PORT || 3002;
@@ -26,4 +28,14 @@ sqlite.open('./database.db', { Promise })
     .then(() => sqlite.migrate({force:'last'}))
     .catch(err => console.log({error: err, at: 'database open/init'}));
 
-app.listen(port);
+const server = http.createServer(app);
+
+// Initialise websocket server
+const wss = new WebSocket.Server({server});
+
+wss.on("connection", (ws) => {
+    SimulationCommunicator.setWs(ws);
+});
+
+// Start the server
+server.listen(port);
