@@ -40,14 +40,14 @@ const sqlite = require('sqlite');
 const Request = require('./syntax/Request');
 const PDP = require('./pdp');
 const PAP = require('./pap');
-const PolicySet = require('./syntax/PolicySet');
+const Policy = require('./syntax/Policy');
 
 let obj = JSON.parse(fs.readFileSync('./examples/fileowner_example_request.json', 'utf8'));
 let authreq = new Request();
 authreq._obj_constructor(obj);
 
 let psobj = JSON.parse(fs.readFileSync('./policies/global.json', "utf8"));
-let ps = new PolicySet(psobj);
+let ps = new Policy(psobj);
 
 console.log(ps.evaluate(authreq));
 

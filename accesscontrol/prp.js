@@ -1,5 +1,5 @@
 const fs = require('fs');
-const PolicySet = require('./syntax/PolicySet');
+const Policy = require('./syntax/Policy');
 const path = require('path');
 
 const POL_DIR = path.resolve(__dirname, "./policies/");
@@ -18,13 +18,27 @@ class PRP {
                 if (err) reject(err);
                 let obj = JSON.parse(data);
                 try {
-                    let ps = new PolicySet(obj);
+                    let ps = new Policy(obj);
                     resolve(ps);
                 } catch(err) {
                     reject(err);
                 }
             });
         });
+    }
+
+    getGroupPolicyJSON(id) {
+        return new Promise((resolve, reject) => {
+            fs.readFile(GROUP_DIR+`/group_${id}.json`, "utf8", (err, data) => {
+                if (err) reject(err);
+                try {
+                    let json = JSON.parse(data)
+                    resolve(json)
+                } catch(err) {
+                    reject(err)
+                }
+            })
+        })
     }
 
     getGroupPolicy(id) {
@@ -34,13 +48,27 @@ class PRP {
                 if (err) reject(err);
                 let obj = JSON.parse(data);
                 try {
-                    let ps = new PolicySet(obj);
+                    let ps = new Policy(obj);
                     resolve(ps);
                 } catch(err) {
                     reject(err);
                 }
             });
         });
+    }
+
+    getDevicePolicyJSON(id) {
+        return new Promise((resolve, reject) => {
+            fs.readFile(DEVICE_DIR+`/device_${id}.json`, "utf8", (err, data) => {
+                if (err) reject(err);
+                try {
+                    let json = JSON.parse(data)
+                    resolve(json)
+                } catch(err) {
+                    reject(err)
+                }
+            })
+        })
     }
 
     getDevicePolicy(id) {
@@ -50,7 +78,7 @@ class PRP {
                 if (err) reject(err);
                 let obj = JSON.parse(data);
                 try {
-                    let ps = new PolicySet(obj);
+                    let ps = new Policy(obj);
                     resolve(ps);
                 } catch(err) {
                     reject(err);
@@ -63,7 +91,7 @@ class PRP {
         fs.readFile(path.resolve(__dirname, POL_DIR+"test.json"), 'utf8', (err, data) => {
             if (err) throw err;
             let obj = JSON.parse(data);
-            this.global_policies = new PolicySet(obj);
+            this.global_policies = new Policy(obj);
             cb(this.global_policies);
         });
     }

@@ -1,23 +1,41 @@
 {
-    "id": "global_root",
-    "target":{},
-    "obligations":[],
+    "id": "0",
+    "name": "Root",
+    "description": "Root of the policy file",
+    "obligations": [],
+    "target": {},
     "algorithm": "firstApplicable",
-    "policies": [
+    "children": [
         {
-            "id": "global_owner_has_access",
-            "target":{},
-            "obligations":[],
-            "algorithm": "firstApplicable",
-            "rules": [
-                {
-                    "id": 1,
-                    "target":{},
-                    "condition":{"comparator":"equalTo", "param1":{"subjectAttribute": "user_id"}, "param2": {"resourceAttribute": "device_owner_id"}},
-                    "effect":"Permit",
-                    "obligations":[]
+            "id": "0_0",
+            "name": "Device Owner",
+            "description": "User is devices owner so permit",
+            "obligations": [],
+            "target": {},
+            "condition": {
+                "comparator": "equalTo",
+                "param1": {
+                    "resourceAttribute": {
+                        "attribute_id": "device_owner_id",
+                        "data_type": "integer"
+                    },
+                    "default_value": {
+                        "value": "-1",
+                        "data_type": "integer"
+                    }
+                },
+                "param2": {
+                    "subjectAttribute": {
+                        "attribute_id": "user_id",
+                        "data_type": "integer"
+                    },
+                    "default_value": {
+                        "value": "-2",
+                        "data_type": "integer"
+                    }
                 }
-            ]
+            },
+            "effect": "Permit"
         }
     ]
 }

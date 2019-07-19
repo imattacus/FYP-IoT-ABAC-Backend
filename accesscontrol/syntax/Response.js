@@ -1,7 +1,9 @@
 class Response {
     // TODO: Will be more useful if a response has more info about where it has come from etc will be easier for users to understand..
 
-    constructor() {
+    constructor(id, description) {
+        this.id = id
+        this.description = description
         this.Decision = "NotApplicable";
         this.Obligations = [];
     }

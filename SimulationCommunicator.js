@@ -29,6 +29,8 @@ class SimulationCommunicator {
         this.requests = []
         this.count = 0
         this.ws = null
+        this.time = 12
+        this.date = 8
     }
 
     isConnected() {

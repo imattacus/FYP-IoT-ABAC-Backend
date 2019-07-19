@@ -1,23 +1,11 @@
 // const Evaluable = require('./Evaluable');
 
 class Comparator {
-    constructor(obj, evaluator) {
-        this.evaluator = evaluator;
-        if (!('comparator' in obj)) throw new Error("Invalid comparator.");
-        this.op = obj.comparator;
-        switch (this.op) {
-            case 'equalTo':
-                if(!('param1' in obj)) throw new Error("Missing param1 in comparator");
-                if(!('param2' in obj)) throw new Error("Missing param2 in comparator");
-                // this.param1 = new Evaluable(obj.param1);
-                // this.param2 = new Evaluable(obj.param2);
-                this.param1 = evaluator._DI(obj.param1);
-                this.param2 = evaluator._DI(obj.param2);
-                break;
-            default:
-                throw new Error('Invalid comparator operation.');
-                break;
-        }
+
+    constructor(op, param1, param2) {
+        this.op = op
+        this.param1 = param1
+        this.param2 = param2
     }
 
     // apply(param, value) {
@@ -33,10 +21,15 @@ class Comparator {
     evaluate(request) {
         switch(this.op) {
             case 'equalTo':
-                let v1 = this.param1.evaluate(request);
-                let v2 = this.param2.evaluate(request);
+                var v1 = this.param1.evaluate(request);
+                var v2 = this.param2.evaluate(request);
                 console.log("EQUALTO: " + v1 + ", " + v2);
                 return this._equalTo(v1,v2);
+            case 'lessThan':
+                var v1 = this.param1.evaluate(request);
+                var v2 = this.param2.evaluate(request);
+                console.log("LESSTHAN: " + v1 + ", " + v2)
+                return this._lessThan(v1, v2);
             default:
                 throw new Error('Cannot evaluate invalid comparator.');
         }
@@ -44,6 +37,10 @@ class Comparator {
 
     _equalTo(param, value) {
         return param == value;
+    }
+
+    _lessThan(param, value) {
+        return param < value
     }
 }
 

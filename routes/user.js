@@ -3,6 +3,12 @@ const db = require('sqlite')
 const router = express.Router()
 const Promise = require('bluebird')
 const authentication = require('../authentication')
+const PRP = require('../accesscontrol/prp')
+const PAP = require('../accesscontrol/pap')
+const Request = require('../accesscontrol/syntax/Request')
+const simulationCommunicator = require('../SimulationCommunicator')
+
+const defaultAttributes = require('../accesscontrol/defaultAttributes')
 
 router.get("/test", authentication.requireAuthenticated, (req, res) => {
     if (req.authenticated) {
@@ -78,6 +84,96 @@ router.get('/groups', authentication.requireAuthenticated, (req, res) => {
         })
         .catch(err => res.json({status:'error', error:err}));
 });
+
+// Get all the policies a user can access (is admin of group, or is owner of device)
+router.get('/policies', authentication.requireAuthenticated, (req, res) => {
+    let userid = req.user.id
+    let groups
+    let devices
+    db.all("SELECT id, name FROM Groups WHERE admin=?", userid, {Promise})
+    .then(rows => groups = rows)
+    .then(() => db.all("SELECT id, name FROM Device WHERE ownerid=?", userid, { Promise }))
+    .then(rows => devices = rows)
+    .then(() => res.json({status:'success', groups: groups, devices: devices}))
+    .catch(err => res.json({status:'error', error: err}))
+});
+
+// Get a group policy - sends the json
+router.get('/policies/group/:groupID', authentication.authUserIsGroupAdmin, (req, res) => {
+    let prp = new PRP()
+    prp.getGroupPolicyJSON(req.params.groupID)
+    .then(json => res.json({status:'success', data: json}))
+    .catch(err => res.json({status:'error', error:err}))
+});
+
+router.post('/policies/group/:groupID', authentication.authUserIsGroupAdmin, (req, res) => {
+    let pap = new PAP()
+    pap.setGroupPolicy(req.params.groupID, req.body.data)
+    .then(() => res.json({status:'success'}))
+    .catch(err => res.json({status: 'error', error: err}))
+})
+
+router.get('/editor/groupdetails/:groupID', authentication.authUserIsGroupAdmin, (req, res) => {
+    let userDefaultAttributes = defaultAttributes.userDefaultAttributes
+    let deviceDefaultAttributes = defaultAttributes.deviceDefaultAttributes
+    let envDefaultAttributes = defaultAttributes.environmentDefaultAttributes
+    let envAttributesAndValues = [
+        {
+            attribute_id: 'env_time',
+            data_type: 'integer',
+            value: simulationCommunicator.time
+        },
+        {
+            attribute_id: 'env_date',
+            data_type: 'integer',
+            value: simulationCommunicator.date
+        }
+    ]
+    let groupCustomAttributes
+    let usersAndAttributes
+    let devicesAndAttributes
+
+    db.all("SELECT name AS attribute_id, prettyname, datatype AS data_type FROM AttributeDef WHERE groupid=?", req.params.groupID, { Promise })
+    .then(rows => groupCustomAttributes = rows)
+    .then(() => db.all("SELECT * FROM User WHERE id IN (SELECT userid FROM GroupSubscription WHERE groupid=?)", req.params.groupID, { Promise }))
+    .then(rows => Promise.all(rows.map(row => {
+        return new Promise((resolve, reject) => {
+            let user = row
+            let attributes = new Request()
+            Promise.all([attributes.populateUserDefaultAttributes(db, user.id), attributes.populateUserCustomAttributes(db, user.id)])
+            .then(() => {
+                resolve({user: user, attributes: attributes.Subject})
+            })
+            .catch(err => reject({error:"error getting attributes for user " + user.id, err: err}))
+        })
+    })))
+    .then(results => usersAndAttributes = results)
+    .then(() => db.all("SELECT * FROM Device WHERE id IN (SELECT deviceid FROM GroupSubscription WHERE groupid=?)", req.params.groupID, { Promise }))
+    .then(rows => Promise.all(rows.map(row => {
+        return new Promise((resolve, reject) => {
+            let device = row
+            let attributes = new Request()
+            Promise.all([attributes.populateDeviceDefaultAttributes(db, device.id), attributes.populateDeviceCustomAttributes(db, device.id)])
+            .then(() => {
+                resolve({device: device, attributes: attributes.Resource})
+            })
+            .catch(err => reject({error:"error getting attributes for device " + device.id, err: err}))
+        })
+    })))
+    .then(results => devicesAndAttributes = results)
+    .then(() => {
+        res.json({status:"success", data: {
+            userDefaultAttributes: userDefaultAttributes,
+            deviceDefaultAttributes: deviceDefaultAttributes,
+            environmentDefaultAttributes: envAttributesAndValues,
+            groupCustomAttributes: groupCustomAttributes,
+            users: usersAndAttributes,
+            devices: devicesAndAttributes
+        }})
+    })
+    .catch(err => res.json({status: 'error', error: err}))
+
+})
 
 module.exports = router;
 

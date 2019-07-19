@@ -1,5 +1,6 @@
 // An example request can be seen in the examples directory, made up of info about Subject, Resource, Action and Environment
 const Attribute = require('./Attribute');
+const SimulationCommunicator = require('../../SimulationCommunicator')
 
 class Request {
 
@@ -113,6 +114,22 @@ class Request {
         });
     }
 
+    populateEnvironmentAttributes() {
+        let attrs = [
+            {
+                attribute_id: 'env_time',
+                data_type: 'integer',
+                value: SimulationCommunicator.time
+            },
+            {
+                attribute_id: 'env_date',
+                data_type: 'integer',
+                value: SimulationCommunicator.date
+            }
+        ]
+        attrs.map(attr => this._addEnvironmentAttribute(new Attribute(attr.attribute_id, attr.data_type, attr.value)))
+    }
+
     populateDeviceCustomAttributes(db, deviceid) {
         return new Promise((resolve, reject) => {
             db.all(`
@@ -135,7 +152,8 @@ class Request {
             this.populateUserDefaultAttributes(db, userid),
             this.populateUserCustomAttributes(db, userid),
             this.populateDeviceDefaultAttributes(db, deviceid),
-            this.populateDeviceCustomAttributes(db, deviceid)
+            this.populateDeviceCustomAttributes(db, deviceid),
+            this.populateEnvironmentAttributes()
         ]);
     }
 

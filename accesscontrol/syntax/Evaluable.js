@@ -3,14 +3,17 @@ const Comparator = require('./Comparator');
 
 class Evaluable {
     constructor(obj) {
+        console.log(obj)
         if (Object.keys(obj).length == 0) {
-            this.isEmpty = true;
+            this.op = 'empty'
+            return
         }
 
         // This is a value literal because it contains the key 'value'
         if ('value' in obj) {
             this.op = 'value';
             this.value = obj.value;
+            this.data_type = obj.data_type;
             return;
         }
 
@@ -18,6 +21,7 @@ class Evaluable {
         if ('subjectAttribute' in obj) {
             this.op = 'subjectAttribute';
             this.attr = obj.subjectAttribute;
+            this.default_value = new Evaluable(obj.default_value)
             return;
         }
 
@@ -25,25 +29,41 @@ class Evaluable {
         if ('resourceAttribute' in obj) {
             this.op = 'resourceAttribute';
             this.attr = obj.resourceAttribute;
+            this.default_value = new Evaluable(obj.default_value)
             return;
+        }
+
+        if ('environmentAttribute' in obj) {
+            this.op = 'environmentAttribute'
+            this.attr = obj.environmentAttribute
+            this.default_value = new Evaluable(obj.default_value)
+            return
         }
 
         // This is a comparator because it contains the key 'comparator'
         if ('comparator' in obj) {
             this.op = 'comparator';
-            this.comparator = new Comparator(obj, this);
+            let param1 = new Evaluable(obj.param1)
+            let param2 = new Evaluable(obj.param2)
+            this.comparator = new Comparator(obj.comparator, param1, param2);
             return;
         }
 
         // This is an allOf combinator because it contains the key 'allOf'
         if ('allOf' in obj) {
             this.op = 'combinator';
-            this.combinator = new Combinator('allOf', obj.allOf.map(n => {return new Evaluable(n)}));
+            this.combinator = new Combinator('allOf', obj.allOf.map(n => {
+                let child = new Evaluable(n)
+                return child
+            }));
             return;
         }
         if ('anyOf' in obj) {
             this.op = 'combinator';
-            this.combinator = new Combinator('anyOf', obj.anyOf.map(n => {return new Evaluable(n)}));
+            this.combinator = new Combinator('anyOf', obj.anyOf.map(n => {
+                let child = new Evaluable(n)
+                return child
+            }));
             return;
         }
 
@@ -58,37 +78,60 @@ class Evaluable {
             this.op = 'resourceHasAttribute';
             this.attr = obj.resourceHasAttribute;
             return;
-        } 
+        }
+
+        if ('actionType' in obj) {
+            this.op="actionType"
+            this.action = obj.actionType
+            return;
+        }
     }
 
     evaluate(request) {
-        if (this.isEmpty) return true;
+        let ret
         switch(this.op) {
+            case 'empty':
+                ret = true
+                break
             case 'value':
-                return this.value;
+                ret = this.value;
+                break
             case 'subjectAttribute':
-                return this._getSubjectAttribute(request);
+                ret = this._getSubjectAttribute(request);
+                break
             case 'resourceAttribute':
-                return this._getResourceAttribute(request);
+                ret = this._getResourceAttribute(request);
+                break
+            case 'environmentAttribute':
+                ret = this._getEnvironmentAttribute(request)
+                break
             case 'combinator':
-                return this.combinator.evaluate(request);
+                ret = this.combinator.evaluate(request);
+                break
             case 'comparator':
-                return this.comparator.evaluate(request);
+                ret = this.comparator.evaluate(request);
+                break
             case 'subjectHasAttribute':
-                return this._subjectHasAttribute(request);
+                ret = this._subjectHasAttribute(request);
+                break
             case 'resourceHasAttribute':
-                return this._resourceHasAttribute(request);
+                ret = this._resourceHasAttribute(request);
+                break
+            case 'actionType':
+                ret = this._actionType(request);
+                break
             default:
                 throw new Error("Could not evaluate invalid evaluable.");
         }
+        this.result = ret
+        return this.result
     }
 
     _getSubjectAttribute(request) {
         try {
             return request.getSubjectAttribute(this.attr).value;
         } catch(err) {
-            console.log(err);
-            throw err;
+            return this.default_value.evaluate()
         }
     }
 
@@ -96,24 +139,46 @@ class Evaluable {
         try {
             return request.getResourceAttribute(this.attr).value;
         } catch(err) {
-            console.log(err);
-            throw err;
+            return this.default_value.evaluate()
+        }
+    }
+
+    _getEnvironmentAttribute(request) {
+        try {
+            return request.getResourceAttribute(this.attr.attribute_id).value
+        } catch(err) {
+            return this.default_value.evaluate()
         }
     }
 
     _subjectHasAttribute(request) {
-        console.log("Subject has attribute " + this.attr + " = " + !(request.getSubjectAttribute(this.attr) == undefined));
-        return !(request.getSubjectAttribute(this.attr) == undefined);
+        try {
+            let attr = request.getSubjectAttribute(this.attr.attribute_id)
+            if (attr == undefined) {
+                return false
+            }
+            return true
+        } catch (err) {
+            return false
+        }
     }
 
     _resourceHasAttribute(request) {
-        console.log("Resource has attribute " + this.attr + " = " + !(request.getResourceAttribute(this.attr) == undefined));
-        return !(request.getResourceAttribute(this.attr) == undefined);
+        try {
+            let attr = request.getResourceAttribute(this.attr.attribute_id)
+            if (attr == undefined) {
+                return false
+            }
+            return true
+        } catch(err) {
+            return false
+        }
     }
 
-    _DI(obj) {
-        return new Evaluable(obj);
+    _actionType(request) {
+        return this.action == request.getActionType()
     }
+
 }
 
 module.exports = Evaluable;

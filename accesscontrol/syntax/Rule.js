@@ -10,10 +10,21 @@ class Rule {
         if(!("obligations" in rawObj)) throw new Error("obligations not defined in rule object.");
         if(!("condition" in rawObj)) throw new Error("condition not defined in rule object.");
         if(!("effect" in rawObj)) throw new Error("effect not defined in rule object.");
+        if ("name" in rawObj) {
+            this.name = rawObj.name
+        } else {
+            this.name = "No Name"
+        }
+        
+        if(("description" in rawObj)) {
+            this.description = rawObj.description
+        } else {
+            this.description = "No Description"
+        }
 
         this.id = rawObj.id;
         this.target = new Evaluable(rawObj.target);
-        this.condition = new Evaluable(rawObj.condition);
+        this.condition = new Evaluable(rawObj.condition)
         this.effect = rawObj.effect;
         this.obligations = rawObj.obligations;
     }
@@ -25,7 +36,7 @@ class Rule {
 
     evaluate(request) {
         // Evaluate the condition of this rule to determine what decision should be made (CAUTION does not test target, just condition)
-        let response = new Response();
+        let response = new Response(this.id, this.description);
         if (this.condition.evaluate(request)) {
             response.setDecision(this.effect);
             response.setObligations(this.obligations);

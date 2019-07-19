@@ -94,4 +94,22 @@ router.post('/devices/:deviceID', authentication.requireAuthenticated, (req, res
         });
 });
 
+router.get("/simulation/date", (req, res) => {
+    res.json({date: SimulationCommunicator.date})
+})
+
+router.get("/simulation/time", (req, res) => {
+    res.json({time: SimulationCommunicator.time})
+})
+
+router.post("/simulation/date", (req, res) => {
+    SimulationCommunicator.date = req.body.date
+    res.json({status:'success'})
+})
+
+router.post("/simulation/time", (req, res) => {
+    SimulationCommunicator.time = req.body.time
+    res.json({status:'success'})
+})
+
 module.exports = router;

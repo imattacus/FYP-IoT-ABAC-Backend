@@ -1,4 +1,4 @@
-const PolicySet = require('./syntax/PolicySet');
+const Policy = require('./syntax/Policy');
 const PRP = require('./prp');
 const Response = require('./syntax/Response');
 const CombiningAlgorithm = require('./syntax/CombiningAlgorithm');
@@ -6,7 +6,7 @@ const CombiningAlgorithm = require('./syntax/CombiningAlgorithm');
 class PDP {
     constructor(){
         this.prp = new PRP();
-        this.combiner = new CombiningAlgorithm('denyOverrides');
+        this.combiner = new CombiningAlgorithm(-1, "Server Override", 'denyOverrides');
     }
 
     evaluate(request, db) {

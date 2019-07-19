@@ -17,7 +17,6 @@ class Combinator {
 
     _anyOf(request) {
         let resArray = this.values.map(val => {return val.evaluate(request)});
-        console.log("Are any of these true?: " + resArray);
         return resArray.some(v => v == true);
     }
 
