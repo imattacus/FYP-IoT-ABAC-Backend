@@ -6,6 +6,7 @@ const cors = require('cors')
 const WebSocket = require('ws')
 const http = require('http')
 const SimulationCommunicator = require('./SimulationCommunicator')
+const path = require('path')
 
 const app = express();
 const port = process.env.PORT || 3002;
@@ -18,6 +19,12 @@ app.use(cors());
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
+
+app.use(express.static(path.join(__dirname, 'build')));
+
+app.get('/', function(req, res) {
+    res.sendFile(path.join(__dirname, 'build', 'index.html'));
+});
 
 app.use('/iot', iotRoutes);
 app.use('/users', userRoutes);
